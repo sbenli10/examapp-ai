@@ -4,7 +4,7 @@ import '../../utils/env/env.dart';
 
 Future<void> setupSupabase() async {
   await Supabase.initialize(
-    url: 'https://ppeguofryornsywpyxel.supabase.co',
-    anonKey: Env.anonKey,
+    url: Env.supabaseUrl,
+    anonKey: Env.supabaseAnonKey,
   );
 }

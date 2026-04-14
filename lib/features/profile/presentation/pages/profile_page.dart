@@ -34,8 +34,8 @@ class _ProfilePageState extends State<ProfilePage> {
       context.router.push(const AuthRoute());
     }
 
-    final usernameController = useTextEditingController(
-      text: user?.userMetadata?['username'],
+    final nicknameController = useTextEditingController(
+      text: user?.userMetadata?['nickname'],
     );
     final widgetState = useState<int>(0);
 
@@ -64,9 +64,9 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               UserBubble(
-                username: usernameController.text.isEmpty
+                username: nicknameController.text.isEmpty
                     ? "U"
-                    : usernameController.text,
+                    : nicknameController.text,
               ),
               const SizedBox(height: kHugePadding),
               Form(
@@ -74,11 +74,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Padding(
                   padding: const EdgeInsets.all(kDefaultPadding),
                   child: SupaTextField(
-                    label: "Username",
-                    controller: usernameController,
+                    label: "Nickname",
+                    controller: nicknameController,
                     keyboardType: TextInputType.name,
                     onChanged: (_) => widgetState.value = widgetState.value + 1,
-                    isEmptyError: "Please enter a username",
+                    isEmptyError: "Please enter a nickname",
                   ),
                 ),
               ),
@@ -88,17 +88,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     return;
                   }
 
-                  if (usernameController.text.length < 3) {
+                  if (nicknameController.text.length < 3) {
                     context.showSnackBar(
-                      message: "Username must be at least 3 characters",
+                      message: "Nickname must be at least 3 characters",
                     );
                     return;
                   }
 
-                  if (usernameController.text ==
-                      user?.userMetadata?['username']) {
+                  if (nicknameController.text.length > 20) {
                     context.showSnackBar(
-                      message: "The username is the same as before",
+                      message: "Nickname must be at most 20 characters",
+                    );
+                    return;
+                  }
+
+                  if (nicknameController.text ==
+                      user?.userMetadata?['nickname']) {
+                    context.showSnackBar(
+                      message: "The nickname is the same as before",
                     );
                     return;
                   }
@@ -106,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   final result = await ProfileRepositoryImpl(
                     remoteDataSource: ProfileRemoteDataSourceImpl(),
                   ).updateProfile(
-                    username: usernameController.text,
+                    nickname: nicknameController.text,
                   );
 
                   result.fold(

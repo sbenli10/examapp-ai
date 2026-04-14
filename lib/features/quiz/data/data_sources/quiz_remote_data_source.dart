@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
@@ -56,47 +55,44 @@ class QuizRemoteDataSourceImpl implements QuizRemoteDataSource {
     required QuizModel quiz,
     required QuizInfoModel quizInfo,
   }) async {
-    final username = supabase.auth.currentUser!.userMetadata!['username'];
+    final nickname = supabase.auth.currentUser!.userMetadata?['nickname'] ?? '';
+    final userId = supabase.auth.currentUser!.id;
 
     try {
-      // Check if a row with the same id already exists
-      final row = await supabase
-          .from('users')
-          .select()
-          .eq('user_id', supabase.auth.currentUser!.id)
+      // Lookup the user's exam from their profile
+      final profile = await supabase
+          .from('profiles')
+          .select('exam_type')
+          .eq('user_id', userId)
           .limit(1)
-          .single();
+          .maybeSingle();
 
-      if (row.isEmpty) {
-        await supabase.from('users').insert({
-          'points': quizInfo.totalPoints,
-          'quizzes': [
-            json.encode(
-              {
-                ...quiz.toMap(),
-                ...quizInfo.toMap(),
-              },
-            ),
-          ],
-          'username': username,
-        });
-      } else {
-        await supabase.from('users').update({
-          'points': row['points'] + quizInfo.totalPoints,
-          'quizzes': [
-            ...row['quizzes'],
-            json.encode(
-              {
-                ...quiz.toMap(),
-                ...quizInfo.toMap(),
-              },
-            ),
-          ],
-          'username': username,
-        }).match({
-          'user_id': supabase.auth.currentUser!.id,
-        });
+      final examType = profile?['exam_type'] as String? ?? 'TYT';
+
+      // Find or use the exam_id corresponding to the user's exam type
+      final examRow = await supabase
+          .from('exams')
+          .select('id')
+          .eq('name', examType)
+          .limit(1)
+          .maybeSingle();
+
+      if (examRow == null) {
+        log('No exam found for type: $examType, skipping points recording');
+        return quiz;
       }
+
+      final examId = examRow['id'] as String;
+
+      // Record points via the points_ledger table
+      await supabase.from('points_ledger').insert({
+        'user_id': userId,
+        'exam_id': examId,
+        'points': quizInfo.totalPoints,
+        'reason': 'quiz_completion',
+        'ref_type': 'manual',
+        'note': 'Quiz: ${quizInfo.name} by $nickname',
+      });
     } on PostgrestException catch (e) {
       log(
         "Error with uploadQuizToDatabase: ${e.message}",

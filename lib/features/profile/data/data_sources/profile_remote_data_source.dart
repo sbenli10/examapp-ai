@@ -6,29 +6,28 @@ import '../../../../core/utils/errors/exeptions.dart';
 import '../../../../core/utils/resources/supabase.dart';
 
 abstract class ProfileRemoteDataSource {
-  Future<void> updateProfile({required String username});
+  Future<void> updateProfile({required String nickname});
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
-  Future<void> updateProfile({required String username}) async {
+  Future<void> updateProfile({required String nickname}) async {
     try {
-      // Update the user in Supabase Auth
+      // Update the user metadata in Supabase Auth
       await supabase.auth.updateUser(
         UserAttributes(
-          data: {'username': username},
+          data: {'nickname': nickname},
         ),
       );
 
-      // Update the user in Supabase Database
-      await supabase.from('users').update({'username': username}).eq(
+      // Update the nickname in the profiles table
+      await supabase.from('profiles').update({'nickname': nickname}).eq(
         'user_id',
         supabase.auth.currentUser!.id,
       );
     } on PostgrestException catch (e) {
       throw ServerException(message: e.message);
     } catch (e) {
-      // If an unexpected error occurs, print the type of the error
       log(
         "Error with updating profile: $e, Error type: ${e.runtimeType}",
       );
