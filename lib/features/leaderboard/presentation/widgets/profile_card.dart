@@ -34,7 +34,7 @@ class ProfileCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Username: ${user.name}",
+                "Nickname: ${user.name}",
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               Text(
@@ -42,7 +42,7 @@ class ProfileCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               Text(
-                "Points: ${user.points}",
+                "Exam: ${user.examType}",
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ],

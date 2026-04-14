@@ -19,10 +19,7 @@ class LeaderboardListTile extends StatelessWidget {
       padding: const EdgeInsets.only(top: kSmallPadding),
       child: ListTile(
         title: Text(user.name),
-        trailing: Text(
-          "${user.points} points",
-          style: const TextStyle(fontSize: 18),
-        ),
+        subtitle: Text(user.examType),
         leading: CircleAvatar(
           radius: 26,
           child: Text(user.name.substring(0, 1)),

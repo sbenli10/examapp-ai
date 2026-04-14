@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/constants/numbers.dart';
 import '../../data/models/user_model.dart';
 import '../widgets/profile_card.dart';
-import '../widgets/public_quiz_list_view.dart';
 
 @RoutePage()
 class PublicProfilePage extends StatelessWidget {
@@ -29,15 +28,10 @@ class PublicProfilePage extends StatelessWidget {
             const SizedBox(height: kHugePadding),
             ProfileCard(user: user),
             const SizedBox(height: kLargePadding),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Quizzes of ${user.name}:",
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+            Text(
+              "Exam: ${user.examType}",
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: kLargePadding),
-            PublicQuizListView(quizzes: user.quizzes),
           ],
         ),
       ),

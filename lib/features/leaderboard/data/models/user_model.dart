@@ -1,63 +1,39 @@
-import 'dart:convert';
-
-import 'public_quiz_model.dart';
-
 class UserModel {
-  /// The id of the user
+  /// The id of the user (user_id from profiles)
   final String id;
 
-  /// The name of the user
+  /// The nickname of the user
   final String name;
 
-  /// When the user first uploaded a quiz
+  /// When the profile was created
   final DateTime createdAt;
 
-  /// The quizzes that the user uploaded
-  final List<PublicQuizModel> quizzes;
+  /// The exam type the user is preparing for
+  final String examType;
 
-  /// The points the user has
-  final int points;
+  /// The email of the user
+  final String email;
 
   UserModel({
     required this.id,
     required this.name,
     required this.createdAt,
-    required this.quizzes,
-    required this.points,
+    required this.examType,
+    required this.email,
   });
 
-  /// Use this when loading data from supabase
+  /// Use this when loading data from supabase profiles table
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: map['user_id'] as String,
-      name: map['username'] as String,
+      name: map['nickname'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
-      quizzes: List<PublicQuizModel>.from(
-        (map['quizzes'] as List<dynamic>).map<PublicQuizModel>(
-          (x) => PublicQuizModel.fromJson(x as String),
-        ),
-      ),
-      points: map['points'] as int,
-    );
-  }
-
-  factory UserModel.fromJson(String source) {
-    final sourceMap = json.decode(source) as Map<String, dynamic>;
-
-    return UserModel(
-      id: sourceMap['user_id'] as String,
-      name: sourceMap['username'] as String,
-      createdAt: DateTime.parse(sourceMap['created_at'] as String),
-      quizzes: List<PublicQuizModel>.from(
-        (sourceMap['quizzes'] as List<dynamic>).map<PublicQuizModel>(
-          (x) => PublicQuizModel.fromJson(x as String),
-        ),
-      ),
-      points: sourceMap['points'] as int,
+      examType: map['exam_type'] as String,
+      email: map['email'] as String,
     );
   }
 
   @override
   String toString() =>
-      'UserModel(id: $id, name: $name, createdAt: $createdAt, quizzes: $quizzes, points: $points)';
+      'UserModel(id: $id, name: $name, createdAt: $createdAt, examType: $examType)';
 }

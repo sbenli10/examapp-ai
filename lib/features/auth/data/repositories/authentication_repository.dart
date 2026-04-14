@@ -1,24 +1,22 @@
 import 'dart:developer';
 
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/utils/errors/exeptions.dart';
-import '../../../../core/utils/extensions/snack_bar_extension.dart';
 import '../../../../core/utils/resources/supabase.dart';
+import '../../../../core/services/profile_setup_service.dart';
 
 abstract class AuthenticationRepository {
   Future<void> signIn({
     required String email,
     required String password,
-    required BuildContext context,
   });
 
   Future<void> signUp({
     required String email,
     required String password,
-    required String username,
-    required BuildContext context,
+    required String nickname,
+    String examType,
   });
 }
 
@@ -36,19 +34,30 @@ class AuthenticationRepositoryImpl implements AuthenticationRepository {
   Future<void> signIn({
     required String email,
     required String password,
-    required BuildContext context,
   }) async {
     try {
       await supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
-    } on AuthApiException catch (e) {
-      if (context.mounted) {
-        context.showSnackBar(message: e.message);
+
+      // After sign-in, ensure profile exists
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final nickname =
+            user.userMetadata?['nickname'] as String? ??
+            email.split('@').first;
+        await ProfileSetupService().ensureProfileExists(
+          userId: user.id,
+          email: email,
+          nickname: nickname,
+        );
       }
+    } on AuthApiException {
+      rethrow;
     } catch (e) {
       log("Failed to authenticate: $e, Error type: ${e.runtimeType}");
+      rethrow;
     }
   }
 
@@ -56,45 +65,31 @@ class AuthenticationRepositoryImpl implements AuthenticationRepository {
   Future<void> signUp({
     required String email,
     required String password,
-    required String username,
-    required BuildContext context,
+    required String nickname,
+    String examType = 'TYT',
   }) async {
     try {
       final response = await supabase.auth.signUp(
         email: email,
         password: password,
-        data: {"username": username},
+        data: {'nickname': nickname},
       );
 
-      await _createEntryInDatabase(response);
-    } on AuthApiException catch (e) {
-      if (context.mounted) {
-        context.showSnackBar(message: e.message);
+      if (response.user != null) {
+        await ProfileSetupService().ensureProfileExists(
+          userId: response.user!.id,
+          email: email,
+          nickname: nickname,
+          examType: examType,
+        );
       }
-    } on ServerException catch (e) {
-      if (context.mounted) {
-        context.showSnackBar(message: e.message ?? 'Server Error');
-      }
+    } on AuthApiException {
+      rethrow;
+    } on ServerException {
+      rethrow;
     } catch (e) {
-      log("Failed to authenticate: $e, Error type: ${e.runtimeType}");
-    }
-  }
-
-  /// Onyl used when signing up
-  Future<void> _createEntryInDatabase(AuthResponse response) async {
-    try {
-      await supabase.from('users').insert({
-        'user_id': response.user!.id,
-        'username': response.user!.userMetadata!['username'],
-        'quizzes': [],
-      });
-    } on PostgrestException catch (e) {
-      throw ServerException(message: e.message);
-    } catch (e) {
-      // If an unexpected error occurs, print the type of the error
-      log(
-        "Error with _createEntryInDatabase: $e, Error type: ${e.runtimeType}",
-      );
+      log("Failed to sign up: $e, Error type: ${e.runtimeType}");
+      rethrow;
     }
   }
 }

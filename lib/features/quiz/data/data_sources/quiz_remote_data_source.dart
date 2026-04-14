@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
@@ -56,47 +55,18 @@ class QuizRemoteDataSourceImpl implements QuizRemoteDataSource {
     required QuizModel quiz,
     required QuizInfoModel quizInfo,
   }) async {
-    final username = supabase.auth.currentUser!.userMetadata!['username'];
+    final nickname = supabase.auth.currentUser!.userMetadata?['nickname'] ?? '';
 
     try {
-      // Check if a row with the same id already exists
-      final row = await supabase
-          .from('users')
-          .select()
-          .eq('user_id', supabase.auth.currentUser!.id)
-          .limit(1)
-          .single();
-
-      if (row.isEmpty) {
-        await supabase.from('users').insert({
-          'points': quizInfo.totalPoints,
-          'quizzes': [
-            json.encode(
-              {
-                ...quiz.toMap(),
-                ...quizInfo.toMap(),
-              },
-            ),
-          ],
-          'username': username,
-        });
-      } else {
-        await supabase.from('users').update({
-          'points': row['points'] + quizInfo.totalPoints,
-          'quizzes': [
-            ...row['quizzes'],
-            json.encode(
-              {
-                ...quiz.toMap(),
-                ...quizInfo.toMap(),
-              },
-            ),
-          ],
-          'username': username,
-        }).match({
-          'user_id': supabase.auth.currentUser!.id,
-        });
-      }
+      // Record points via the points_ledger table
+      await supabase.from('points_ledger').insert({
+        'user_id': supabase.auth.currentUser!.id,
+        'exam_id': '00000000-0000-0000-0000-000000000000', // placeholder
+        'points': quizInfo.totalPoints,
+        'reason': 'quiz_completion',
+        'ref_type': 'manual',
+        'note': 'Quiz: ${quizInfo.name} by $nickname',
+      });
     } on PostgrestException catch (e) {
       log(
         "Error with uploadQuizToDatabase: ${e.message}",
