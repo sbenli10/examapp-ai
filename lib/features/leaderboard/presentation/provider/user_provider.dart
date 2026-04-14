@@ -38,7 +38,7 @@ class UserProvider extends ChangeNotifier {
 
   void _sortUsers() {
     users?.sort(
-      (a, b) => a.name.compareTo(b.name),
+      (a, b) => b.createdAt.compareTo(a.createdAt),
     );
   }
 }

@@ -65,6 +65,7 @@ class ProfileSetupService {
       rethrow;
     } catch (e) {
       log('ProfileSetupService unexpected error: $e');
+      rethrow;
     }
   }
 }

@@ -56,12 +56,38 @@ class QuizRemoteDataSourceImpl implements QuizRemoteDataSource {
     required QuizInfoModel quizInfo,
   }) async {
     final nickname = supabase.auth.currentUser!.userMetadata?['nickname'] ?? '';
+    final userId = supabase.auth.currentUser!.id;
 
     try {
+      // Lookup the user's exam from their profile
+      final profile = await supabase
+          .from('profiles')
+          .select('exam_type')
+          .eq('user_id', userId)
+          .limit(1)
+          .maybeSingle();
+
+      final examType = profile?['exam_type'] as String? ?? 'TYT';
+
+      // Find or use the exam_id corresponding to the user's exam type
+      final examRow = await supabase
+          .from('exams')
+          .select('id')
+          .eq('name', examType)
+          .limit(1)
+          .maybeSingle();
+
+      if (examRow == null) {
+        log('No exam found for type: $examType, skipping points recording');
+        return quiz;
+      }
+
+      final examId = examRow['id'] as String;
+
       // Record points via the points_ledger table
       await supabase.from('points_ledger').insert({
-        'user_id': supabase.auth.currentUser!.id,
-        'exam_id': '00000000-0000-0000-0000-000000000000', // placeholder
+        'user_id': userId,
+        'exam_id': examId,
         'points': quizInfo.totalPoints,
         'reason': 'quiz_completion',
         'ref_type': 'manual',

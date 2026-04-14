@@ -43,7 +43,7 @@ class _AuthPageState extends State<AuthPage>
     super.dispose();
   }
 
-  static final _emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$');
+  static final _emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$');
   static final _nicknameRegex = RegExp(r'^[a-zA-Z0-9_.]+$');
 
   @override
@@ -73,7 +73,7 @@ class _AuthPageState extends State<AuthPage>
                   borderRadius: BorderRadius.circular(kDefaultBorderRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: Colors.black.withOpacity(0.08),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                     ),
@@ -89,7 +89,7 @@ class _AuthPageState extends State<AuthPage>
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
+                          color: AppColors.primary.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: const Icon(
@@ -109,7 +109,7 @@ class _AuthPageState extends State<AuthPage>
                             ? 'Sign in to continue learning'
                             : 'Start your exam preparation journey',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
                       const SizedBox(height: kHugePadding),
